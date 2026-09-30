@@ -4,57 +4,55 @@
 import sys
 import pandas as pd
 
+LESSONS = ['Arithmancy', 'Astronomy', 'Herbology', 'Defense Against the Dark Arts', 'Divination', 'Muggle Studies', 'Ancient Runes', 'History of Magic', 'Transfiguration', 'Potions', 'Care of Magical Creatures', 'Charms', 'Flying']
 
 def count(values):
-    """Compte le nombre de valeurs non manquantes."""
+    """Compte le nombre de valeurs."""
     total = 0
     for x in values:
-        if x == x:              # une valeur NaN n'est jamais égale à elle-même
-            total += 1
+        total += 1
     return total
 
 
 def mean(values, count_val):
     """Calcule la moyenne."""
-    total = sum(values)
+    total = 0
+    for x in values:
+        total += x
     return total / count_val
 
 
-
 def std(values, count_val, mean_val):
+    """Calcule l'écart type."""
     total = 0
     for x in values:
-        if x == x:
-            total += (x - mean_val) ** 2
-    return (total / (count_val - 1)) ** 0.5
+        total += (x - mean_val) ** 2
+    return (total / count_val) ** 0.5
+
 
 def my_min(values):
     smallest = values[0]
-
     for x in values:
-        if x == x and x < smallest:
+        if x < smallest:
             smallest = x
     return smallest
 
+
 def my_max(values):
     highest = values[0]
-
     for x in values:
-        if x == x and x > highest:
+        if x > highest:
             highest = x
     return highest
 
-def quantile(values, q):
-    valid = [x for x in values if x == x]  # enlève les NaN
-    valid.sort()
-    n = len(valid)
 
-    idx = q * (n - 1)
+def quantile(values, count_val, q):
+    idx = q * (count_val - 1)
     lower = int(idx)               # partie entière (index inférieur)
-    upper = min(lower + 1, n - 1)  # index suivant, sans dépasser la fin
+    upper = min(lower + 1, count_val - 1)  # index suivant, sans dépasser la fin
     frac = idx - lower              # partie décimale, pour l'interpolation
-
-    return valid[lower] + (valid[upper] - valid[lower]) * frac
+    values.sort()
+    return values[lower] + (values[upper] - values[lower]) * frac
 
 
 def print_table(stats, col_width=20, label_width=8, cols_per_block=3):
@@ -86,12 +84,10 @@ def print_table(stats, col_width=20, label_width=8, cols_per_block=3):
 def describe(df):
     """Construit et affiche le tableau de statistiques."""
     numeric_cols = df.select_dtypes(include="number").columns
-    numeric_cols = [col for col in numeric_cols if col not in ("Index", "Hogwarts House")]
+    numeric_cols = [col for col in numeric_cols if col in (LESSONS)]
     stats = {}
 
     for col in numeric_cols:
-        values = df[col].dropna().tolist()
-        values = df[col].dropna().tolist()
         values = df[col].dropna().tolist()
         count_val = count(values)
         mean_val = mean(values, count_val)
@@ -102,9 +98,9 @@ def describe(df):
             "Mean": mean_val,
             "Std": std_val,
             "Min": my_min(values),
-            "25%": quantile(values, 0.25),
-            "50%": quantile(values, 0.5),
-            "75%": quantile(values, 0.75),
+            "25%": quantile(values, count_val, 0.25),
+            "50%": quantile(values, count_val, 0.5),
+            "75%": quantile(values, count_val, 0.75),
             "Max": my_max(values),
         }
 
@@ -116,10 +112,24 @@ def main():
         print("Usage: python3 describe.py <dataset.csv>")
         sys.exit(1)
 
+    file = sys.argv[1]
+
     try:
-        df = pd.read_csv(sys.argv[1])
+        df = pd.read_csv(file)
     except FileNotFoundError:
-        print(f"Erreur : fichier '{sys.argv[1]}' introuvable.")
+        print(f"Erreur : le fichier '{file}' est introuvable.")
+        sys.exit(1)
+    except IsADirectoryError:
+        print(f"Erreur : '{file}' est un dossier, pas un fichier CSV.")
+        sys.exit(1)
+    except PermissionError:
+        print(f"Erreur : permission refusée pour lire '{file}'.")
+        sys.exit(1)
+    except pd.errors.EmptyDataError:
+        print(f"Erreur : le fichier '{file}' est vide.")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Erreur inattendue lors de la lecture de '{file}' : {e}")
         sys.exit(1)
 
     describe(df)
