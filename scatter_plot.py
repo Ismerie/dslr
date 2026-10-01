@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import numpy as np
 
+HOUSES = "Hogwarts House"
 LESSONS = ['Arithmancy', 'Astronomy', 'Herbology', 'Defense Against the Dark Arts', 'Divination', 'Muggle Studies', 'Ancient Runes', 'History of Magic', 'Transfiguration', 'Potions', 'Care of Magical Creatures', 'Charms', 'Flying']
 COLORS = {
     "Gryffindor": "#AA0000",
@@ -29,8 +30,15 @@ def get_corrs(df, courses):
 
 
 def scatter_plot(df):
+    if HOUSES not in df.columns:
+        print(f"Erreur : La colonne '{HOUSES}' est absente du csv.")
+        return
+    houses = df[HOUSES].dropna().unique()
+
     courses = [c for c in df.select_dtypes(include="number").columns if c in (LESSONS)]
-    houses = df["Hogwarts House"].dropna().unique()
+    if len(courses) != len(LESSONS):
+        print("Erreur : Matières manquantes.")
+        return
 
     max_glob, min_glob = get_corrs(df, courses)
 
@@ -39,8 +47,8 @@ def scatter_plot(df):
     ax_glob_min = axes[1, 0]
 
     for idx, house in enumerate(houses, start=1):
-        house_df = df[df["Hogwarts House"] == house]
-        color_rgba = mcolors.to_rgba(COLORS.get(house), alpha=0.5)
+        house_df = df[df[HOUSES] == house]
+        color_rgba = mcolors.to_rgba(COLORS.get(house, "#808080"), alpha=0.5)
 
         # Remplissage des graphiques globaux
         data_max = house_df[[max_glob[0], max_glob[1]]].dropna()

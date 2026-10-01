@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
+HOUSES = "Hogwarts House"
 LESSONS = ['Arithmancy', 'Astronomy', 'Herbology', 'Defense Against the Dark Arts', 'Divination', 'Muggle Studies', 'Ancient Runes', 'History of Magic', 'Transfiguration', 'Potions', 'Care of Magical Creatures', 'Charms', 'Flying']
 COLORS = {
     "Gryffindor": "#AA0000",
@@ -12,16 +13,23 @@ COLORS = {
 }
 
 def histogram(df):
+    if HOUSES not in df.columns:
+        print(f"Erreur : La colonne '{HOUSES}' est absente du csv.")
+        return
+
     courses = [c for c in df.select_dtypes(include="number").columns if c in (LESSONS)]
+    if len(courses) != len(LESSONS):
+        print("Erreur : Matières manquantes.")
+        return
 
     fig, axes = plt.subplots(3, 5, figsize=(18, 10))
     axes = axes.flatten()
 
     for i, course in enumerate(courses):
         ax = axes[i]
-        for house in df["Hogwarts House"].dropna().unique():
-            values = df[df["Hogwarts House"] == house][course].dropna()
-            ax.hist(values, label=house, bins=20, color=mcolors.to_rgba(COLORS.get(house), alpha=0.5))
+        for house in df[HOUSES].dropna().unique():
+            values = df[df[HOUSES] == house][course].dropna()
+            ax.hist(values, label=house, bins=20, color=mcolors.to_rgba(COLORS.get(house, "#808080"), alpha=0.5))
         ax.set_title(course, fontsize=9)
         ax.set_xlabel("Note")
         ax.set_ylabel("Nombre d'élèves")
