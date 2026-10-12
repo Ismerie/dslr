@@ -29,16 +29,19 @@ def pair_plot(df):
         hue=HOUSES, 
         palette=COLORS,
         corner=True,
+        height=0.75,  # taille de chaque case en pouces (2.5 par défaut, trop grand pour 13x13)
         plot_kws={"alpha": 0.5, "s": 5},
         diag_kws={"linewidth": 0.5}
     )
 
     for ax in chart.axes.flatten():
         if ax is not None:
+            # on garde seulement les 10 premières lettres du nom des matières
+            ax.set_xlabel(ax.get_xlabel()[:10])
+            ax.set_ylabel(ax.get_ylabel()[:10])
             ax.yaxis.label.set_rotation(0)
             ax.yaxis.label.set_horizontalalignment("right")
 
-    plt.tight_layout()
     plt.subplots_adjust(
         left=0.1,
         bottom=0.05,

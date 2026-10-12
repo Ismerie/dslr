@@ -42,7 +42,7 @@ def scatter_plot(df):
 
     max_glob, min_glob = get_corrs(df, courses)
 
-    fig, axes = plt.subplots(2, 5, figsize=(22, 8))
+    fig, axes = plt.subplots(2, 5, figsize=(18, 8))
     ax_glob_max = axes[0, 0]
     ax_glob_min = axes[1, 0]
 
@@ -78,7 +78,7 @@ def scatter_plot(df):
             label=house,
             color=color_rgba
         )
-        ax_h_max.set_title(f"Corrélation max positive de {house} ({max_h[2]:.2f})")
+        ax_h_max.set_title(f"{house}\nCorrélation max positive ({max_h[2]:.2f})", fontsize=10)
         ax_h_max.set_xlabel(max_h[0])
         ax_h_max.set_ylabel(max_h[1])
         ax_h_max.legend()
@@ -88,19 +88,26 @@ def scatter_plot(df):
             label=house,
             color=color_rgba
         )
-        ax_h_min.set_title(f"Corrélation max négative de {house} ({min_h[2]:.2f})")
+        ax_h_min.set_title(f"{house}\nCorrélation max négative ({min_h[2]:.2f})", fontsize=10)
         ax_h_min.set_xlabel(min_h[0])
         ax_h_min.set_ylabel(min_h[1])
         ax_h_min.legend()
 
-    ax_glob_max.set_title(f"Corrélation max positive ({max_glob[2]:.2f})")
+    ax_glob_max.set_title(f"Toutes les maisons\nCorrélation max positive ({max_glob[2]:.2f})", fontsize=10)
     ax_glob_max.set_xlabel(max_glob[0])
     ax_glob_max.set_ylabel(max_glob[1])
     ax_glob_max.legend()
-    ax_glob_min.set_title(f"Corrélation max négative ({max_glob[2]:.2f})")
+    ax_glob_min.set_title(f"Toutes les maisons\nCorrélation max négative ({min_glob[2]:.2f})", fontsize=10)
     ax_glob_min.set_xlabel(min_glob[0])
     ax_glob_min.set_ylabel(min_glob[1])
     ax_glob_min.legend()
+
+    # textes plus petits pour que les titres et les graduations ne se chevauchent pas
+    for ax in axes.flatten():
+        ax.tick_params(labelsize=8)
+        ax.xaxis.label.set_size(9)
+        ax.yaxis.label.set_size(9)
+        ax.ticklabel_format(style="plain", useOffset=False)
 
     plt.tight_layout()
     plt.show()
