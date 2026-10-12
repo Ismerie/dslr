@@ -1,1 +1,17 @@
-/venv
+# Environnement virtuel Python
+/venv/
+.venv/
+
+# Cache Python
+__pycache__/
+*.py[cod]
+
+# Fichiers générés par les scripts
+weights.json
+houses.csv
+*.png
+
+# Fichiers système / éditeurs
+.DS_Store
+.vscode/
+.idea/
