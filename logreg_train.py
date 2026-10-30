@@ -36,15 +36,13 @@ def sigmoid(z):
 
 def cost(h, y):
     """Log loss : -(1/m) * somme(y*log(h) + (1-y)*log(1-h))."""
-    m = len(y)
     h = np.clip(h, EPSILON, 1 - EPSILON)  # garde h strictement entre 0 et 1
-    return -np.sum(y * np.log(h) + (1 - y) * np.log(1 - h)) / m
+    return -np.sum(y * np.log(h) + (1 - y) * np.log(1 - h)) / len(y)
 
 
 def gradient(X, h, y):
     """Dérivée du coût par rapport à theta : (1/m) * X^T (h - y)."""
-    m = len(y)
-    return X.T @ (h - y) / m
+    return X.T @ (h - y) / len(y)
 
 
 def train_one(X, y):
@@ -72,10 +70,8 @@ def prepare_data(df):
     stds = []
     for j in range(len(FEATURES)):
         values = raw[:, j].tolist()      # toutes les notes de la matière j
-        count_val = count(values)
-        mean_val = mean(values, count_val)
-        means.append(mean_val)
-        stds.append(std(values, count_val, mean_val))
+        means.append(mean(values))
+        stds.append(std(values))
     means = np.array(means)
     stds = np.array(stds)
 
@@ -86,6 +82,30 @@ def prepare_data(df):
     X = np.column_stack([np.ones(len(normalized)), normalized])
 
     return X, df[HOUSES].to_numpy(), means, stds
+
+
+def logreg_train(df):
+    X, houses, means, stds = prepare_data(df)
+    if len(X) == 0:
+        print("Erreur : aucun élève complet pour l'entraînement.")
+        sys.exit(1)
+
+    # One-vs-all : un classifieur binaire par maison
+    thetas = {}
+    for house in np.unique(houses):
+        print(f"Entraînement : {house} ou pas ?")
+        y = (houses == house).astype(float)  # 1 si l'élève est dans cette maison, sinon 0
+        thetas[house] = train_one(X, y)
+
+    model = {
+        "features": FEATURES,
+        "means": means.tolist(),
+        "stds": stds.tolist(),
+        "thetas": {house: theta.tolist() for house, theta in thetas.items()},
+    }
+    with open(WEIGHTS_FILE, "w") as f:
+        json.dump(model, f, indent=2)
+    print(f"Poids sauvegardés dans {WEIGHTS_FILE}")
 
 
 def main():
@@ -118,27 +138,7 @@ def main():
         print(f"Erreur : colonnes manquantes dans le csv : {', '.join(missing)}")
         sys.exit(1)
 
-    X, houses, means, stds = prepare_data(df)
-    if len(X) == 0:
-        print("Erreur : aucun élève complet pour l'entraînement.")
-        sys.exit(1)
-
-    # One-vs-all : un classifieur binaire par maison
-    thetas = {}
-    for house in np.unique(houses):
-        print(f"Entraînement : {house} ou pas ?")
-        y = (houses == house).astype(float)  # 1 si l'élève est dans cette maison, sinon 0
-        thetas[house] = train_one(X, y)
-
-    model = {
-        "features": FEATURES,
-        "means": means.tolist(),
-        "stds": stds.tolist(),
-        "thetas": {house: theta.tolist() for house, theta in thetas.items()},
-    }
-    with open(WEIGHTS_FILE, "w") as f:
-        json.dump(model, f, indent=2)
-    print(f"Poids sauvegardés dans {WEIGHTS_FILE}")
+    logreg_train(df)
 
 
 if __name__ == "__main__":

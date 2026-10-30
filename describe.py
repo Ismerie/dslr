@@ -14,20 +14,20 @@ def count(values):
     return total
 
 
-def mean(values, count_val):
+def mean(values):
     """Calcule la moyenne."""
     total = 0
     for x in values:
         total += x
-    return total / count_val
+    return total / count(values)
 
 
-def std(values, count_val, mean_val):
+def std(values):
     """Calcule l'écart type."""
     total = 0
     for x in values:
-        total += (x - mean_val) ** 2
-    return (total / count_val) ** 0.5
+        total += (x - mean(values)) ** 2
+    return (total / count(values)) ** 0.5
 
 
 def my_min(values):
@@ -90,13 +90,11 @@ def describe(df):
     for col in numeric_cols:
         values = df[col].dropna().tolist()
         count_val = count(values)
-        mean_val = mean(values, count_val)
-        std_val = std(values, count_val, mean_val)
 
         stats[col] = {
             "Count": count_val,
-            "Mean": mean_val,
-            "Std": std_val,
+            "Mean": mean(values),
+            "Std": std(values),
             "Min": my_min(values),
             "25%": quantile(values, count_val, 0.25),
             "50%": quantile(values, count_val, 0.5),
