@@ -28,11 +28,20 @@ def load_model(path):
     except json.JSONDecodeError:
         print(f"Erreur : '{path}' n'est pas un fichier JSON valide.")
         sys.exit(1)
+    except Exception as e:
+        print(f"Erreur inattendue lors de la lecture de '{path}' : {e}")
+        sys.exit(1)
 
-    for key in ("features", "means", "stds", "thetas"):
-        if key not in model:
-            print(f"Erreur : la clé '{key}' est absente de '{path}'.")
-            sys.exit(1)
+    expected_keys = {"features", "means", "stds", "thetas"}
+    model_keys = set(model.keys())
+    missing = expected_keys - model_keys
+    if missing:
+        print(f"Erreur : clé(s) manquante(s) dans '{path}' : {', '.join(missing)}")
+        sys.exit(1)
+    extra = model_keys - expected_keys
+    if extra:
+        print(f"Erreur : clé(s) inconnue(s) ou inattendue(s) dans '{path}' : {', '.join(extra)}")
+        sys.exit(1)
 
     features = model["features"]
     means = np.array(model["means"])
@@ -81,7 +90,6 @@ def main():
 
     features, means, stds, houses, thetas = load_model(sys.argv[2])
     df = load_dataset(sys.argv[1])
-
     missing = [col for col in features if col not in df.columns]
     if missing:
         print(f"Erreur : colonnes manquantes dans le csv : {', '.join(missing)}")
@@ -99,7 +107,7 @@ def main():
     index = df["Index"] if "Index" in df.columns else range(len(df))
     result = pd.DataFrame({"Index": index, HOUSES: predictions})
     result.to_csv(OUTPUT_FILE, index=False)
-    print(f"Prédictions écrites dans {OUTPUT_FILE} ({len(result)} élèves)")
+    print(f"Prédictions écrites dans {OUTPUT_FILE}, ({len(result)} élèves)")
 
 
 if __name__ == "__main__":
